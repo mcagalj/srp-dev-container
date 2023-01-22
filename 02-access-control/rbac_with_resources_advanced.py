@@ -12,10 +12,7 @@ PERMISSIONS = {
 
 
 def check_permission(role, action):
-    if role in PERMISSIONS:
-        if action in PERMISSIONS[role]:
-            return True
-    return False
+    return role in PERMISSIONS and action in PERMISSIONS[role]
 
 
 def authorization_check(permission):
@@ -33,12 +30,14 @@ def authorization_check(permission):
                 or check_permission(user_role, permission)
             ):
                 print(
-                    f"\n{user_name.upper()} ({user_role}, {user_id}) authorized to {permission.upper()}"
+                    f"\n{user_name.upper()} ({user_role}, {user_id}) "
+                    f"authorized to {permission.upper()}"
                 )
                 return function(*args, **kwargs)
             else:
                 print(
-                    f"\n{user_name.upper()} ({user_role}, {user_id}) not authorized to {permission.upper()}"
+                    f"\n{user_name.upper()} ({user_role}, {user_id}) "
+                    f"not authorized to {permission.upper()}"
                 )
                 return None
 
@@ -59,8 +58,8 @@ def missing_file_check(function):
 
 
 @authorization_check(permission="create")
-def create_file(*, filename):
-    return {"id": uuid.uuid4(), "owner_id": current_user["id"], "name": filename}
+def create_file(*, owner_id, filename):
+    return {"id": uuid.uuid4(), "owner_id": owner_id, "name": filename}
 
 
 @missing_file_check
@@ -98,8 +97,11 @@ if __name__ == "__main__":
 
     print(table)
 
+    # Current user is John Doe (manager)
     current_user = {"id": 1, "name": "John Doe", "role": "manager"}
-    current_user_file = create_file(filename="SRP_lab_report")
+    current_user_file = create_file(
+        owner_id=current_user["id"], filename="SRP_lab_report"
+    )
     print(f"Created file: {current_user_file}")
 
     current_user = {"id": 2, "name": "Ivana Ivic", "role": "user"}

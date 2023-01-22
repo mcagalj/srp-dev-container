@@ -10,10 +10,7 @@ PERMISSIONS = {
 
 
 def check_permission(role, action):
-    if role in PERMISSIONS:
-        if action in PERMISSIONS[role]:
-            return True
-    return False
+    return role in PERMISSIONS and action in PERMISSIONS[role]
 
 
 table = PrettyTable()

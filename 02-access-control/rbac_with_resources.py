@@ -10,10 +10,7 @@ PERMISSIONS = {
 
 
 def check_permission(role, action):
-    if role in PERMISSIONS:
-        if action in PERMISSIONS[role]:
-            return True
-    return False
+    return role in PERMISSIONS and action in PERMISSIONS[role]
 
 
 def authorization_check(permission):
@@ -23,9 +20,17 @@ def authorization_check(permission):
             user_role = current_user.get("role")
 
             if check_permission(user_role, permission):
+                print(
+                    f"\n{user_name.upper()} ({user_role}) "
+                    f"authorized to {permission.upper()}"
+                )
                 return function(*args, **kwargs)
             else:
-                return f"{user_name.upper()} not authorized for {permission.upper()}"
+                print(
+                    f"\n{user_name.upper()} ({user_role}) "
+                    f"not authorized to {permission.upper()}"
+                )
+                return None
 
         return wrapper
 
