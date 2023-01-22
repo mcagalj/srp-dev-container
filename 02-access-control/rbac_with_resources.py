@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from prettytable import PrettyTable
 
 ROLES = ["admin", "manager", "user"]
@@ -9,6 +11,12 @@ PERMISSIONS = {
 }
 
 
+@dataclass
+class User:
+    name: str
+    role: str
+
+
 def check_permission(role, action):
     return role in PERMISSIONS and action in PERMISSIONS[role]
 
@@ -16,8 +24,8 @@ def check_permission(role, action):
 def authorization_check(permission):
     def authorization_decorator(function):
         def wrapper(*args, **kwargs):
-            user_name = current_user.get("name")
-            user_role = current_user.get("role")
+            user_name = current_user.name
+            user_role = current_user.role
 
             if check_permission(user_role, permission):
                 print(
@@ -74,18 +82,17 @@ if __name__ == "__main__":
 
     print(table)
 
-    current_user = {"name": "John Doe", "role": "user"}
+    current_user = User(name="John Doe", role="user")
     status = create_file()
     print(status)
 
-    current_user = {"name": "Jean Doe", "role": "manager"}
+    current_user = User(name="Jean Doe", role="manager")
     status = create_file()
     print(status)
 
-    current_user = {"name": "Jean Doe", "role": "manager"}
     status = update_file()
     print(status)
 
-    current_user = {"name": "Ivana Ivic", "role": "admin"}
+    current_user = User(name="Ivana Ivic", role="admin")
     status = update_file()
     print(status)

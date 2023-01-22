@@ -1,4 +1,5 @@
 import uuid
+from dataclasses import dataclass
 
 from prettytable import PrettyTable
 
@@ -11,6 +12,20 @@ PERMISSIONS = {
 }
 
 
+@dataclass
+class User:
+    id: int
+    name: str
+    role: str
+
+
+@dataclass
+class File:
+    id: int
+    owner_id: int
+    name: str
+
+
 def check_permission(role, action):
     return role in PERMISSIONS and action in PERMISSIONS[role]
 
@@ -18,15 +33,15 @@ def check_permission(role, action):
 def authorization_check(permission):
     def authorization_decorator(function):
         def wrapper(*args, **kwargs):
-            user_id = current_user.get("id")
-            user_name = current_user.get("name")
-            user_role = current_user.get("role")
+            user_id = current_user.id
+            user_name = current_user.name
+            user_role = current_user.role
 
             file = kwargs.get("file")
 
             if (
                 file is not None
-                and file.get("owner_id") == user_id
+                and file.owner_id == user_id
                 or check_permission(user_role, permission)
             ):
                 print(
@@ -59,25 +74,25 @@ def missing_file_check(function):
 
 @authorization_check(permission="create")
 def create_file(*, owner_id, filename):
-    return {"id": uuid.uuid4(), "owner_id": owner_id, "name": filename}
+    return File(id=uuid.uuid4(), owner_id=owner_id, name=filename)
 
 
 @missing_file_check
 @authorization_check(permission="read")
-def read_file(*, file):
-    return f"{file['name']}: content"
+def read_file(*, file: File):
+    return f"{file.name}: content"
 
 
 @missing_file_check
 @authorization_check(permission="update")
-def update_file(*, file):
-    return f"{file['name']}: content updated"
+def update_file(*, file: File):
+    return f"{file.name}: content updated"
 
 
 @missing_file_check
 @authorization_check(permission="delete")
-def delete_file(*, file):
-    return f"{file['name']}: deleted"
+def delete_file(*, file: File):
+    return f"{file.name}: deleted"
 
 
 if __name__ == "__main__":
@@ -98,28 +113,39 @@ if __name__ == "__main__":
     print(table)
 
     # Current user is John Doe (manager)
-    current_user = {"id": 1, "name": "John Doe", "role": "manager"}
-    current_user_file = create_file(
-        owner_id=current_user["id"], filename="SRP_lab_report"
-    )
-    print(f"Created file: {current_user_file}")
+    current_user = User(id=1, name="John Doe", role="manager")
+    current_user_file = create_file(owner_id=current_user.id, filename="SRP_lab_report")
+    print(f"Created: {current_user_file}")
 
-    current_user = {"id": 2, "name": "Ivana Ivic", "role": "user"}
+    # Current user is Ivana Ivic (user)
+    current_user = User(id=2, name="Ivana Ivic", role="user")
     status = read_file(file=current_user_file)
     print(status)
 
-    current_user = {"id": 4, "name": "Mate Matic", "role": "manager"}
-    status = delete_file(file=current_user_file)
-    print(status)
-
-    current_user = {"id": 0, "name": "Jean Doe", "role": "admin"}
-    status = delete_file(file=current_user_file)
-    print(status)
-
-    current_user = {"id": 1, "name": "John Doe", "role": "manager"}
     status = update_file(file=current_user_file)
     print(status)
 
-    current_user = {"id": 1, "name": "John Doe", "role": "manager"}
+    status = delete_file(file=current_user_file)
+    print(status)
+
+    # Current user is Mate Matic (manager)
+    current_user = User(id=4, name="Mate Matic", role="manager")
+    status = read_file(file=current_user_file)
+    print(status)
+
+    status = update_file(file=current_user_file)
+    print(status)
+
+    status = delete_file(file=current_user_file)
+    print(status)
+
+    # Current user is Big Boss (admin)
+    current_user = User(id=0, name="Big Boss", role="admin")
+    status = read_file(file=current_user_file)
+    print(status)
+
+    status = update_file(file=current_user_file)
+    print(status)
+
     status = delete_file(file=current_user_file)
     print(status)
